@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- 引入jquery的库文件 -->
+    <script type="text/javascript" src="js/jquery-2.1.4.js"></script>
+    <!-- &lt;!&ndash; 导入highcharts的js文件 &ndash;&gt;-->
+    <script type="text/javascript" src="js/highcharts.js"></script>
+    <script src="http://cdn.hcharts.cn/highcharts/highcharts-3d.js"></script>
+
+
+    <script type="text/javascript">
+
+        var options = {
+            //图表配置:柱形图
+            chart: {
+                renderTo: 'container',
+                type: 'column',
+                //设置3D柱状图
+                options3d: {
+                    enabled: true,
+                    alpha: 15,//内旋转角
+                    beta: 15,//外旋转角
+                    depth: 50,//深度比
+                    viewDistance: 25//视图距离
+                }
+            },
+            //标题
+            title: {
+                text: '水果消费情况'
+            },
+            //深度比
+            plotOptions: {
+                column: {
+                    depth: 25
+                }
+            },
+            //x轴
+            xAxis: {
+                categories: []
+            },
+            //y轴
+            yAxis: {
+                title: {
+                    text: '单位'
+                }
+            },
+            //数据列数组
+            series: []
+        };
+
+
+
+        $(document).ready(function(){
+            //  alert("kkkkk");
+            $.ajax({
+                type:"post",
+                url:"fruit",
+                async:false,//同步
+                success:function(jsonobj){
+
+                    //设置x轴
+                    var x =[];
+
+                    for(var i=0;i<jsonobj.length;i++){
+                        x[i]=jsonobj[i].fclass;
+                    }
+
+                    for(var j =0;j<x.length;j++){
+                        // alert(x[j]);
+                        //之所以这样赋值是因为定义的options不是图标的对象,所以不能直接将数组赋进去
+                        options.xAxis.categories.push(x[j]);
+                    }
+
+
+
+                    //遍历json对象数组
+                    $.each(jsonobj,function(index,fruit){
+
+                        //创建一个接收数据数组[注意该数组不能定义为全局的,如果定义为全局的人名将会发生覆盖,即图例只显示一个人,但是每条数据
+                        //将会重复出现四次导致,x轴的数据与定义的不符]
+
+                        var series = {
+                            data: []
+                        };
+
+
+                        //后台传到前台的json对象{"apple":8,"banana":5,"id":1,"orange":6,"pear":4,"student":{"id":1,"name":"小明"}}
+                        var result = fruit.name+","+fruit.apple+","+fruit.pear+","+fruit.orange+","+fruit.banana;
+                         //alert(result);
+
+                        var items = result.split(',');
+                        Highcharts.each(items, function(item, itemNo) {
+                            //itemNo是对象数组的下标
+                          //  alert(itemNo);
+                            //item是对象数组的数据
+                            //alert(item);
+
+
+                            //小明,5,9,3,6
+
+                            if (itemNo==0) {
+                                series.name = item; // 数据列的名字
+                            } else {
+                                console.log(item);
+                                series.data.push(parseFloat(item)); //记得转换成数值类型parseFloat
+
+                            }
+                        });
+                        // 最后将数据 push 到数据列配置里
+                        options.series.push(series);
+
+                    });
+
+                }
+
+            });
+
+            // 创建图表
+            var chart = new Highcharts.Chart('container', options);
+
+            //在创建好图表后,对图表的旋转方位进行设置
+            function showValues() {
+                $('#alpha-value').html(chart.options.chart.options3d.alpha);
+                $('#beta-value').html(chart.options.chart.options3d.beta);
+                $('#depth-value').html(chart.options.chart.options3d.depth);
+            }
+            // Activate the sliders
+            $('#sliders input').on('input change', function () {
+                chart.options.chart.options3d[this.id] = this.value;
+                showValues();
+                chart.redraw(false);
+            });
+            showValues();
+        });
+
+
+    </script>
+
+
+</head>
+<body>
+<!-- 在div 中设置style=min-width,作用是为了让报表自适应不同浏览器的屏幕大小  -->
+<div id="container" style="min-width:400px;height:400px"></div>
+<!-- 设置偏移角 -->
+<div id="sliders">
+    <table>
+        <tr>
+            <td>α 角（内旋转角）</td>
+            <td><input id="alpha" type="range" min="0" max="45" value="15"/> <span id="alpha-value" class="value"></span></td>
+        </tr>
+        <tr>
+            <td>β 角（外旋转角）</td>
+            <td><input id="beta" type="range" min="-45" max="45" value="15"/> <span id="beta-value" class="value"></span></td>
+        </tr>
+        <tr>
+            <td>深度</td>
+            <td><input id="depth" type="range" min="20" max="100" value="50"/> <span id="depth-value" class="value"></span></td>
+        </tr>
+    </table>
+</div>
+<font color="fuchsia" size="5px">Faded Bai Xue ♫ :</font>
+<audio autoplay="autoplay"  controls="controls" loop="loop" src="music/2.mp3"></audio>
+
+</body>
+</html>
